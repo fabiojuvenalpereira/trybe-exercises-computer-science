@@ -40,28 +40,7 @@ def choose_categories(choosed):
         print("o valor digitado precisa ser uma palavra")
 
 
-def game(original, scrambled):
-    attempts = 3
-
-    while attempts > 0:
-        print(f"você deve tentar desembaralhar esta palavra: {scrambled}")
-        print(f"tente adivinhar a palavra, você tem {attempts} tentativas")
-        player_attempt = input()
-
-        if player_attempt == original:
-            print("Parabéns voc6e acertou a palavra")
-            break
-        
-        else:
-            attempts -= 1
-    
-    if attempts == 0:
-        print(f"infelismente você perdeu, a palavra era {original}")
-
-
-def palavras_embaralhadas():
-    categories = list_categories()
-
+def select_category(categories):
     list_to_choose = ""
     index = 0
 
@@ -72,6 +51,33 @@ def palavras_embaralhadas():
 
     print(f"escolha uma categoria: {removed_last_comma}:")
     category_items = choose_categories(input())
+    
+    return category_items
+
+
+def game(original, scrambled):
+    attempts = 3
+
+    while attempts > 0:
+        print(f"Você deve tentar adivinhar qual é esta palavra: {scrambled}.")
+        print(f"Você ainda possui {attempts} tentativas!")
+        player_attempt = input()
+
+        if player_attempt.upper() == original.upper():
+            print("Parabéns você acertou a palavra")
+            break
+        
+        else:
+            attempts -= 1
+    
+    if attempts == 0:
+        print(f"Infelismente não foi desta vez, a palavra era {original}.")
+
+
+def palavras_embaralhadas():
+    categories = list_categories()
+    
+    category_items = select_category(categories)
 
     sorted_word = random.choice(category_items)
     scrambled = "".join(random.sample(sorted_word, len(sorted_word)))
