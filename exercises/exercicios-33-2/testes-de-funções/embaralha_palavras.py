@@ -32,7 +32,6 @@ def choose_categories(choosed):
 
         if len(found): return found
 
-
     except TypeError:
         print(" a categoria precisa ser uma das categorias existentes")
     
