@@ -2,32 +2,37 @@ from abc import ABC, abstractmethod
 from csv import DictWriter
 import gzip
 import json
+from zipfile import ZipFile
 
 
-class Compressor(ABC):
-    def __init__(self, filepath='./'):
-        self.filepath = filepath
-
+class Serializer(ABC):
     @abstractmethod
-    def compress(self, file_name):
+    def serialize(cls, data):
         raise NotImplementedError
 
 
-class ZipCompressor(Compressor):
-    def compress(self, file_name):
-        with ZipFile(file_name + '.zip', 'w') as zip_file:
+class ZipCompressor(Serializer):
+    FILE_PATH = 'exercises/exercicios-34/sales-report/'
+
+    @classmethod
+    def compress(cls, file_name):
+        with ZipFile(cls.FILE_PATH + file_name + '.zip', 'w') as zip_file:
             zip_file.write(file_name)
 
 
-class GzCompressor(Compressor):
-    def compress(self, file_name):
+class GzCompressor(Serializer):
+    @staticmethod
+    def compress(file_name):
         with open(file_name, 'rb') as content:
             with gzip.open(file_name + '.gz', 'wb') as gzip_file:
                 gzip_file.writelines(content)
 
 class SalesReport(ABC):
-    def __init__(self, export_file):
+    FILE_EXTENSION = ''
+
+    def __init__(self, export_file, compressor=GzCompressor):
         self.export_file = export_file
+        self.compressor = compressor
 
     def build(self):
         return [{
@@ -41,28 +46,24 @@ class SalesReport(ABC):
                 'Coluna 3': 'Dado C'
                 }]
 
+    def get_export_file_name(self):
+      return self.export_file + self.FILE_EXTENSION
+
     def compress(self):
-        binary_content = json.dumps(self.build()).encode('utf-8')
-
-        with gzip.open(self.export_file + '.gz', 'wb') as compressed_file:
-            compressed_file.write(binary_content)
-
-    @abstractmethod
-    def serialize(self):
-        raise NotImplementedError
+        self.serialize()
+        self.compressor.compress(self.get_export_file_name())
 
 
 class SalesReportJSON(SalesReport):
-    def get_lenght(self):
-        return len(self.build())
-    
+    FILE_EXTENSION = '.json'
+
     def serialize(self):
-        with open(f"exercises/exercicios-34/sales-report/{self.export_file}" + '.json', 'w') as file:
+        with open(self.export_file + '.json', 'w') as file:
             json.dump(self.build(), file)
 
 
 class SalesReportCSV(SalesReport):
-    def serialize(self):
+     def serialize(self):
          with open(f"exercises/exercicios-34/sales-report/{self.export_file}" + '.csv', 'w') as file:
             headers = ["Coluna 1", "Coluna 2", "Coluna 3"]
             csv_writer = DictWriter(file, headers)
@@ -71,6 +72,8 @@ class SalesReportCSV(SalesReport):
                 csv_writer.writerow(item)
 
 
-# test = SalesReportCSV('teste')
-test = SalesReportJSON('teste')
-print(test.get_lenght())
+relatorio_de_compras = SalesReportJSON('meu_relatorio_1')
+relatorio_de_vendas = SalesReportJSON('meu_relatorio_2', ZipCompressor)
+
+relatorio_de_compras.compress()
+relatorio_de_vendas.compress()
